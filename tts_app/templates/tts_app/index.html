@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text to Speech and Speech Recognition</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <h1>Text to Speech</h1>
+    <textarea id="text" rows="4" cols="50"></textarea><br>
+    <button id="speak-btn">Speak Text</button>
+
+    <h1>Speech Recognition</h1>
+    <button id="recognize-btn">Recognize Speech</button>
+    <p id="recognized-text"></p>
+
+    <script>
+        $(document).ready(function() {
+            $('#speak-btn').click(function() {
+                var text = $('#text').val();
+                $.ajax({
+                    url: '/speak/',
+                    type: 'POST',
+                    data: { 'text': text },
+                    headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+                    success: function(response) {
+                        alert('Text spoken successfully');
+                    }
+                });
+            });
+
+            $('#recognize-btn').click(function() {
+                $.ajax({
+                    url: '/recognize/',
+                    type: 'POST',
+                    headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            $('#recognized-text').text('Recognized text: ' + response.text);
+                        } else {
+                            $('#recognized-text').text('Error recognizing speech');
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
