@@ -24,6 +24,7 @@
     </select>
     <button id="translate-btn">Translate Text</button>
     <p id="translated-text"></p>
+    <button id="speak-translated-btn" style="display:none;">Speak Translated Text</button>
 
     <script>
         $(document).ready(function() {
@@ -66,9 +67,23 @@
                     success: function(response) {
                         if (response.status === 'success') {
                             $('#translated-text').text('Translated text: ' + response.translated_text);
+                            $('#speak-translated-btn').show();
                         } else {
                             $('#translated-text').text('Error translating text');
                         }
+                    }
+                });
+            });
+
+            $('#speak-translated-btn').click(function() {
+                var text = $('#translated-text').text().replace('Translated text: ', '');
+                $.ajax({
+                    url: '/speak/',
+                    type: 'POST',
+                    data: { 'text': text },
+                    headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+                    success: function(response) {
+                        alert('Translated text spoken successfully');
                     }
                 });
             });
