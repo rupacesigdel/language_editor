@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Text to Speech and Speech Recognition</title>
+    <title>Text to Speech, Speech Recognition, and Translation</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
@@ -14,6 +14,16 @@
     <h1>Speech Recognition</h1>
     <button id="recognize-btn">Recognize Speech</button>
     <p id="recognized-text"></p>
+
+    <h1>Text Translation</h1>
+    <textarea id="translate-text" rows="4" cols="50"></textarea><br>
+    <select id="language">
+        {% for code, name in languages %}
+            <option value="{{ code }}">{{ name }}</option>
+        {% endfor %}
+    </select>
+    <button id="translate-btn">Translate Text</button>
+    <p id="translated-text"></p>
 
     <script>
         $(document).ready(function() {
@@ -40,6 +50,24 @@
                             $('#recognized-text').text('Recognized text: ' + response.text);
                         } else {
                             $('#recognized-text').text('Error recognizing speech');
+                        }
+                    }
+                });
+            });
+
+            $('#translate-btn').click(function() {
+                var text = $('#translate-text').val();
+                var language = $('#language').val();
+                $.ajax({
+                    url: '/translate/',
+                    type: 'POST',
+                    data: { 'text': text, 'language': language },
+                    headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            $('#translated-text').text('Translated text: ' + response.translated_text);
+                        } else {
+                            $('#translated-text').text('Error translating text');
                         }
                     }
                 });

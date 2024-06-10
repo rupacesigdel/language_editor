@@ -5,4 +5,5 @@ urlpatterns = [
     path('', views.index, name='index'),
     path('speak/', views.speak_text, name='speak_text'),
     path('recognize/', views.recognize_speech, name='recognize_speech'),
+    path('translate/', views.translate_text, name='translate_text'),
 ]
