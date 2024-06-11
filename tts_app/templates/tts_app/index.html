@@ -5,10 +5,58 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Text to Speech, Speech Recognition, and Translation</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            margin: 0;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        h1 {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+            color: blue;
+        }
+        textarea, select, button {
+            width: 100%;
+            font-size: 1em;
+            margin-bottom: 10px;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: green;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: darkgreen;
+        }
+        button:active {
+            background-color: lightgreen;
+        }
+        button.loading-active {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        #error-message {
+            color: red;
+            display: none;
+        }
+    </style>
 </head>
 <body>
     <h1>Text to Speech</h1>
-    <textarea id="text" rows="4" cols="50"></textarea><br>
+    <textarea id="text" rows="4" placeholder="Enter text to speak"></textarea>
+    <select id="voice">
+        {% for voice in voices %}
+            <option value="{{ voice.id }}">{{ voice.name }}</option>
+        {% endfor %}
+    </select>
     <button id="speak-btn">Speak Text</button>
 
     <h1>Speech Recognition</h1>
@@ -16,7 +64,7 @@
     <p id="recognized-text"></p>
 
     <h1>Text Translation</h1>
-    <textarea id="translate-text" rows="4" cols="50"></textarea><br>
+    <textarea id="translate-text" rows="4" placeholder="Enter text to translate"></textarea>
     <select id="language">
         {% for code, name in languages %}
             <option value="{{ code }}">{{ name }}</option>
@@ -25,23 +73,59 @@
     <button id="translate-btn">Translate Text</button>
     <p id="translated-text"></p>
     <button id="speak-translated-btn" style="display:none;">Speak Translated Text</button>
+    <p id="error-message"></p>
 
     <script>
         $(document).ready(function() {
+            // Initialize select2 on the language select element
+            $('#language').select2();
+
+            function toggleLoading(button, isLoading) {
+                if (isLoading) {
+                    button.addClass('loading-active');
+                    button.prop('disabled', true);
+                } else {
+                    button.removeClass('loading-active');
+                    button.prop('disabled', false);
+                }
+            }
+
+            function displayError(message) {
+                $('#error-message').text(message).show();
+                setTimeout(function() {
+                    $('#error-message').hide();
+                }, 5000);
+            }
+
             $('#speak-btn').click(function() {
+                var button = $(this);
                 var text = $('#text').val();
+                var voice_id = $('#voice').val();
+                toggleLoading(button, true);
                 $.ajax({
                     url: '/speak/',
                     type: 'POST',
-                    data: { 'text': text },
+                    data: { 'text': text, 'voice_id': voice_id },
                     headers: { 'X-CSRFToken': '{{ csrf_token }}' },
                     success: function(response) {
-                        alert('Text spoken successfully');
+                        if (response.status === 'success') {
+                            alert('Text spoken successfully');
+                        } else {
+                            displayError(response.message);
+                        }
+                    },
+                    error: function() {
+                        displayError('An unexpected error occurred');
+                    },
+                    complete: function() {
+                        toggleLoading(button, false);
                     }
                 });
             });
 
             $('#recognize-btn').click(function() {
+                var button = $(this);
+                toggleLoading(button, true);
                 $.ajax({
                     url: '/recognize/',
                     type: 'POST',
@@ -50,15 +134,23 @@
                         if (response.status === 'success') {
                             $('#recognized-text').text('Recognized text: ' + response.text);
                         } else {
-                            $('#recognized-text').text('Error recognizing speech');
+                            displayError(response.message);
                         }
+                    },
+                    error: function() {
+                        displayError('An unexpected error occurred');
+                    },
+                    complete: function() {
+                        toggleLoading(button, false);
                     }
                 });
             });
 
             $('#translate-btn').click(function() {
+                var button = $(this);
                 var text = $('#translate-text').val();
                 var language = $('#language').val();
+                toggleLoading(button, true);
                 $.ajax({
                     url: '/translate/',
                     type: 'POST',
@@ -69,21 +161,39 @@
                             $('#translated-text').text('Translated text: ' + response.translated_text);
                             $('#speak-translated-btn').show();
                         } else {
-                            $('#translated-text').text('Error translating text');
+                            displayError(response.message);
                         }
+                    },
+                    error: function() {
+                        displayError('An unexpected error occurred');
+                    },
+                    complete: function() {
+                        toggleLoading(button, false);
                     }
                 });
             });
 
             $('#speak-translated-btn').click(function() {
+                var button = $(this);
                 var text = $('#translated-text').text().replace('Translated text: ', '');
+                toggleLoading(button, true);
                 $.ajax({
                     url: '/speak/',
                     type: 'POST',
                     data: { 'text': text },
                     headers: { 'X-CSRFToken': '{{ csrf_token }}' },
                     success: function(response) {
-                        alert('Translated text spoken successfully');
+                        if (response.status === 'success') {
+                            alert('Translated text spoken successfully');
+                        } else {
+                            displayError(response.message);
+                        }
+                    },
+                    error: function() {
+                        displayError('An unexpected error occurred');
+                    },
+                    complete: function() {
+                        toggleLoading(button, false);
                     }
                 });
             });
