@@ -14,6 +14,7 @@
             margin: 0;
             max-width: 600px;
             margin: 0 auto;
+            min-hight: 120vh;
         }
         h1 {
             font-size: 1.5em;
@@ -47,6 +48,15 @@
             color: red;
             display: none;
         }
+        footer {
+            background-color: #343a40;
+            color: #fff;
+            padding: 0px;
+            text-align: center;
+            hight: 5%;
+            width: 100%;
+            position:button;
+        }
     </style>
 </head>
 <body>
@@ -61,7 +71,7 @@
 
     <h1>Speech Recognition</h1>
     <button id="recognize-btn">Recognize Speech</button>
-    <p id="recognized-text"></p>
+    <textarea id="recognized-text" rows="4" placeholder="Speak something by on click Recognize Speech button"></textarea>
 
     <h1>Text Translation</h1>
     <textarea id="translate-text" rows="4" placeholder="Enter text to translate"></textarea>
@@ -71,9 +81,16 @@
         {% endfor %}
     </select>
     <button id="translate-btn">Translate Text</button>
-    <p id="translated-text"></p>
-    <button id="speak-translated-btn" style="display:none;">Speak Translated Text</button>
+    <textarea id="translated-text" placeholder="here is your traslated text"></textarea>
+    <button id="speak-translated-btn" style="display">Speak Translated Text</button>
     <p id="error-message"></p>
+
+    <footer>
+        <p>
+            language translator &copy; 2024 | All rights reserved
+        </p>
+    </footer>
+
 
     <script>
         $(document).ready(function() {
@@ -125,7 +142,9 @@
 
             $('#recognize-btn').click(function() {
                 var button = $(this);
+                var micIcon = $('#mic-icon');
                 toggleLoading(button, true);
+                micIcon.show();
                 $.ajax({
                     url: '/recognize/',
                     type: 'POST',
@@ -142,6 +161,7 @@
                     },
                     complete: function() {
                         toggleLoading(button, false);
+                        micIcon.hide();
                     }
                 });
             });
